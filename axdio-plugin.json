@@ -1,0 +1,62 @@
+{
+  "id": "atlas",
+  "name": "Sonic Atlas",
+  "version": "1.0.0",
+  "description": "Your whole library as a map of how it sounds: calm to intense, dark to bright, coloured by musical key. Draw a line across it and hear a journey that follows it, mixed by key and tempo the way a DJ would. Everything is worked out on your server.",
+  "author": "xo.st",
+  "license": "MIT",
+  "homepage": "https://github.com/xo907/axdio-sonic-atlas",
+  "axdio": "2.12.0",
+  "api": 2,
+  "server": "server.py",
+  "requires": [
+    "numpy>=1.24"
+  ],
+  "app": {
+    "scripts": [
+      "atlas.js"
+    ],
+    "styles": [
+      "atlas.css"
+    ]
+  },
+  "admin_pages": [
+    {
+      "id": "atlas",
+      "title": "Sonic Atlas",
+      "icon": "eye",
+      "script": "admin.js",
+      "group": "Library"
+    }
+  ],
+  "settings": {
+    "id": "atlas",
+    "title": "Mapping",
+    "fields": [
+      {
+        "key": "atlas_analyze",
+        "type": "bool",
+        "label": "Map new songs in the background",
+        "default": true,
+        "help": "Each song is listened to once (a minute of it, from about a third of the way in) to place it on the map. New and changed songs are mapped as the library finds them."
+      },
+      {
+        "key": "atlas_speed",
+        "type": "select",
+        "label": "Speed",
+        "default": "1",
+        "options": [
+          [
+            "1",
+            "Gentle: one song at a time"
+          ],
+          [
+            "2",
+            "Faster: two at a time"
+          ]
+        ],
+        "help": "A song takes a few seconds, more when the music is on a network or cloud drive. Faster uses more of the server while it maps."
+      }
+    ]
+  }
+}
