@@ -24,6 +24,15 @@ Axdio.plugin('atlas', atlas => {
     return camMajor(c) ? `${KEYS[rel]} major` : `${KEYS[(rel + 9) % 12]} minor`;
   }
   const COLORS = Array.from({ length: 25 }, (_, c) => c ? `hsl(${(camNum(c) * 30 + 150) % 360}, ${camMajor(c) ? 85 : 72}%, ${camMajor(c) ? 68 : 58}%)` : '#fff');
+  function galaxy(x, y) {                                            // the square of ranks, folded into a round sky, denser in the middle
+    const a = 2 * x - 1, b = 2 * y - 1;
+    if (!a && !b) return [0.5, 0.5];
+    let r, phi;                                                       // Shirley–Chiu: neighbours stay neighbours, sides stay sides
+    if (Math.abs(a) > Math.abs(b)) { r = a; phi = (Math.PI / 4) * (b / a); }
+    else { r = b; phi = Math.PI / 2 - (Math.PI / 4) * (a / b); }
+    const k = Math.pow(Math.abs(r), 1.35) * Math.sign(r) * 0.47;
+    return [0.5 + k * Math.cos(phi), 0.5 + k * Math.sin(phi)];
+  }
   let GLOWS = null;                                                   // a soft halo per colour, drawn behind the stars
   function glows() {
     if (GLOWS) return GLOWS;
@@ -67,7 +76,8 @@ Axdio.plugin('atlas', atlas => {
       const t = L.byRel.get(rel);
       if (!t) continue;
       const al = L.albums[t.albumId];
-      const s = { i: stars.length, t, rel, x: x / 10000, y: y / 10000, bpm, cam, num: camNum(cam), major: camMajor(cam), e, m, v,
+      const [gx, gy] = galaxy(x / 10000, y / 10000);
+      const s = { i: stars.length, t, rel, x: gx, y: gy, bpm, cam, num: camNum(cam), major: camMajor(cam), e, m, v,
                   artist: String(t.artist || '').toLowerCase(), album: al ? al.title : '', plays: plays.get(rel) || 0 };
       s.text = `${t.title} ${t.artist} ${s.album}`.toLowerCase();
       stars.push(s); byRel.set(rel, s);
@@ -296,16 +306,17 @@ Axdio.plugin('atlas', atlas => {
 
         // Stars, a batch per colour: a soft glow, then the star. Lighter blending makes crowded parts shine.
         // Fewer songs, bigger stars: a small library still looks like a sky.
-        const r0 = Math.max(1.2, Math.min(2.8, 4.2 - 0.75 * Math.log10(Math.max(10, A.stars.length))));
+        const r0 = Math.max(0.75, Math.min(2.8, 4.4 - 0.95 * Math.log10(Math.max(10, A.stars.length))));
+        const crowd = Math.min(1, Math.sqrt(600 / Math.max(600, A.stars.length)));   // thousands of halos would wash the colours out
         const zr = Math.min(3.2, Math.pow(P.view.z, 0.38));
         const dim = !!(P.match || P.liked);
         ctx.globalCompositeOperation = 'lighter';
         const halo = glows();
         const size = s => (r0 + Math.min(2.2, Math.log1p(s.plays) * 0.55)) * zr;
-        ctx.globalAlpha = dim ? 0.55 : 0.32;
+        ctx.globalAlpha = (dim ? 0.55 : 0.32) * (dim ? 1 : Math.max(0.35, crowd));
         for (const s of A.stars) {                                       // halos first, for the stars that are lit
           if (dim && !(P.match ? P.match.has(s) : liked(s))) continue;
-          const x = toX(s.x), y = toY(s.y), R = size(s) * 4.5;
+          const x = toX(s.x), y = toY(s.y), R = size(s) * (3 + 1.5 * crowd);
           if (x < -R || y < -R || x > W + R || y > H + R) continue;
           ctx.drawImage(halo[s.cam], x - R, y - R, R * 2, R * 2);
         }
@@ -322,7 +333,7 @@ Axdio.plugin('atlas', atlas => {
               ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 6.283); any = true;
             }
             if (!any) continue;
-            ctx.globalAlpha = bright ? 0.95 : 0.13;
+            ctx.globalAlpha = bright ? 0.6 + 0.35 * crowd : 0.13;
             ctx.fillStyle = COLORS[c]; ctx.fill();
           }
         }

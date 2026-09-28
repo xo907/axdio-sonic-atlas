@@ -1,7 +1,7 @@
 {
   "id": "atlas",
   "name": "Sonic Atlas",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Your whole library as a map of how it sounds: calm to intense, dark to bright, coloured by musical key. Draw a line across it and hear a journey that follows it, mixed by key and tempo the way a DJ would. Everything is worked out on your server.",
   "author": "xo.st",
   "license": "MIT",
